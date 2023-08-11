@@ -3,9 +3,10 @@ package capital
 import (
 	"errors"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -69,7 +70,7 @@ type Markets struct {
 	Markets []Market
 }
 
-//------------------------------------------------------
+// ------------------------------------------------------
 type Price struct {
 	SnapshotTime     string     `json:"snapshotTime"`
 	SnapshotTimeUTC  string     `json:"snapshotTimeUTC"`
@@ -100,8 +101,8 @@ type Prices struct {
 	Prices []Price
 }
 
-//------------------------------------------------------
-type Capital struct {
+// ------------------------------------------------------
+type Client struct {
 	ApiKey        string
 	Identifier    string
 	Password      string
@@ -111,8 +112,8 @@ type Capital struct {
 	headers       map[string]string
 }
 
-func New(apiKey, identifier, password string) *Capital {
-	return &Capital{
+func New(apiKey, identifier, password string) *Client {
+	return &Client{
 		ApiKey:     apiKey,
 		Identifier: identifier,
 		Password:   password,
@@ -121,7 +122,7 @@ func New(apiKey, identifier, password string) *Capital {
 	}
 }
 
-func (c *Capital) ping() (err error) {
+func (c *Client) ping() (err error) {
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
 		Get(API_URL + PING)
@@ -136,7 +137,7 @@ func (c *Capital) ping() (err error) {
 }
 
 // 只需要运行一次
-func (c *Capital) CreateNewSession() (err error) {
+func (c *Client) CreateNewSession() (err error) {
 	if c.CstToken != "" {
 		return
 	}
@@ -164,7 +165,7 @@ func (c *Capital) CreateNewSession() (err error) {
 }
 
 // 顶级市场分类
-func (c *Capital) MarketNavigation() ([]Node, error) {
+func (c *Client) MarketNavigation() ([]Node, error) {
 	var nodes Nodes
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
@@ -181,7 +182,7 @@ func (c *Capital) MarketNavigation() ([]Node, error) {
 }
 
 // 子市场
-func (c *Capital) SubMarkets(nodeId string) ([]Node, error) {
+func (c *Client) SubMarkets(nodeId string) ([]Node, error) {
 	var nodes Nodes
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
@@ -198,7 +199,7 @@ func (c *Capital) SubMarkets(nodeId string) ([]Node, error) {
 }
 
 // 市场详情
-func (c *Capital) MarketsDetails(epics string) ([]Market, error) {
+func (c *Client) MarketsDetails(epics string) ([]Market, error) {
 	var markets Markets
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
@@ -215,7 +216,7 @@ func (c *Capital) MarketsDetails(epics string) ([]Market, error) {
 }
 
 // 市场详情
-func (c *Capital) MarketsDetailsSearch(searchTerm string) ([]Market, error) {
+func (c *Client) MarketsDetailsSearch(searchTerm string) ([]Market, error) {
 	var markets Markets
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
@@ -232,7 +233,7 @@ func (c *Capital) MarketsDetailsSearch(searchTerm string) ([]Market, error) {
 }
 
 // 交易对查询
-func (c *Capital) EpicsSearch(searchTerm string) string {
+func (c *Client) EpicsSearch(searchTerm string) string {
 	epics := ""
 	var markets Markets
 	resp, err := c.client.R().
@@ -259,7 +260,7 @@ func (c *Capital) EpicsSearch(searchTerm string) string {
 // max 返回结果数量 默认 = 10, 最大 = 1000
 // from 开始时间 格式 YYYY-MM-DDTHH:MM:SS (e.g. 2022-04-01T01:01:00)
 // to 结束时间  格式 YYYY-MM-DDTHH:MM:SS (e.g. 2022-04-01T01:01:00)
-func (c *Capital) HistoricalPrices(epic, resolution, max, from, to string) ([]Price, error) {
+func (c *Client) HistoricalPrices(epic, resolution, max, from, to string) ([]Price, error) {
 	var prices Prices
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
