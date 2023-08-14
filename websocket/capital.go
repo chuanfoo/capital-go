@@ -11,6 +11,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/chuanfoo/capital-go/websocket/models"
+	rest "github.com/chuanfoo/capital-go/rest"
 	"github.com/gorilla/websocket"
 	_ "golang.org/x/exp/maps"
 	_ "golang.org/x/exp/slices"
@@ -29,6 +30,8 @@ type Client struct {
 	cstToken      string
 	securityToken string
 	apiKey        string
+	identifier    string
+	password      string
 	url           string
 
 	shouldClose bool
@@ -53,7 +56,7 @@ type Client struct {
 }
 
 // New creates a client for the Polygon WebSocket API.
-func New(config Config, cstToken, securityToken string) (*Client, error) {
+func New(config Config, cstToken, securityToken, identifier, password string) (*Client, error) {
 	if err := config.validate(); err != nil {
 		return nil, fmt.Errorf("invalid client options: %w", err)
 	}
@@ -61,6 +64,8 @@ func New(config Config, cstToken, securityToken string) (*Client, error) {
 	c := &Client{
 		cstToken:             cstToken,
 		securityToken:        securityToken,
+		identifier:           identifier,
+		password:             password,
 		apiKey:               config.APIKey,
 		backoff:              backoff.NewExponentialBackOff(),
 		rQueue:               make(chan json.RawMessage, 10000),
@@ -363,7 +368,6 @@ func (c *Client) process() (err error) {
 
 func (c *Client) route(msgs []json.RawMessage) error {
 	for _, msg := range msgs {
-		fmt.Println(string(msg))
 		var status models.Status
 		err := json.Unmarshal(msg, &status)
 		if err != nil {
@@ -371,6 +375,12 @@ func (c *Client) route(msgs []json.RawMessage) error {
 			continue
 		}
 		if status.Status != "OK" {
+			if strings.Contains(string(msg), "invalid.session.token") {
+				// create new session
+				client := rest.New(c.apiKey, c.identifier, c.password)
+				c.cstToken = client.CstToken
+				c.securityToken = client.SecurityToken
+			}
 			c.log.Errorf("error message:%s", string(msg))
 			continue
 		}
