@@ -378,7 +378,11 @@ func (c *Client) route(msgs []json.RawMessage) error {
 		if status.Status != "OK" {
 			if strings.Contains(string(msg), "invalid.session.token") {
 				// create new session
-				client := rest.New(c.apiKey, c.identifier, c.password)
+				client := rest.New(c.apiKey, c.identifier, c.password, c.log)
+				err := client.CreateNewSession()
+				if err != nil {
+					c.log.Errorf("Create New Session %v", err)
+				}
 				c.cstToken = client.CstToken
 				c.securityToken = client.SecurityToken
 				c.log.Debugf("Create New Session: CST %s, X-SECURITY-TOKEN %s", c.cstToken, c.securityToken)
