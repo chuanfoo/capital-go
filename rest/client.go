@@ -110,15 +110,17 @@ type Client struct {
 	SecurityToken string
 	client        *resty.Client
 	headers       map[string]string
+	log           Logger
 }
 
-func New(apiKey, identifier, password string) *Client {
+func New(apiKey, identifier, password string, log Logger) *Client {
 	return &Client{
 		ApiKey:     apiKey,
 		Identifier: identifier,
 		Password:   password,
 		client:     resty.New(),
 		headers:    map[string]string{"X-CAP-API-KEY": apiKey},
+		log:        log,
 	}
 }
 
@@ -138,13 +140,14 @@ func (c *Client) ping() (err error) {
 
 // 只需要运行一次
 func (c *Client) CreateNewSession() (err error) {
+	url := API_URL + CREATE_NEW_SESSION
 	if c.CstToken != "" {
 		return
 	}
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
 		SetBody(map[string]interface{}{"identifier": c.Identifier, "password": c.Password}).
-		Post(API_URL + CREATE_NEW_SESSION)
+		Post(url)
 	if err != nil {
 		return
 	}
@@ -159,6 +162,7 @@ func (c *Client) CreateNewSession() (err error) {
 			_ = c.ping()
 		}()
 	} else {
+		c.log.Errorf("URL: %s", url)
 		err = errors.New(resp.Status())
 	}
 	return
@@ -234,12 +238,13 @@ func (c *Client) MarketsDetailsSearch(searchTerm string) ([]Market, error) {
 
 // 交易对查询
 func (c *Client) EpicsSearch(searchTerm string) string {
+	url := API_URL + fmt.Sprintf(MARKETS_DETAILS_SEARCH, searchTerm)
 	epics := ""
 	var markets Markets
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
 		SetResult(&markets).
-		Get(API_URL + fmt.Sprintf(MARKETS_DETAILS_SEARCH, searchTerm))
+		Get(url)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -248,6 +253,7 @@ func (c *Client) EpicsSearch(searchTerm string) string {
 			epics += fmt.Sprintf("%s,%s,%s\n", m.Epic, m.InstrumentName, m.InstrumentType)
 		}
 	} else {
+		c.log.Errorf("URL: %s", url)
 		fmt.Println(resp.Status(), string(resp.Body()))
 	}
 	return epics
@@ -261,11 +267,12 @@ func (c *Client) EpicsSearch(searchTerm string) string {
 // from 开始时间 格式 YYYY-MM-DDTHH:MM:SS (e.g. 2022-04-01T01:01:00)
 // to 结束时间  格式 YYYY-MM-DDTHH:MM:SS (e.g. 2022-04-01T01:01:00)
 func (c *Client) HistoricalPrices(epic, resolution, max, from, to string) ([]Price, error) {
+	url := API_URL + fmt.Sprintf(HISTORICAL_PRICES, epic, resolution, max, from, to)
 	var prices Prices
 	resp, err := c.client.R().
 		SetHeaders(c.headers).
 		SetResult(&prices).
-		Get(API_URL + fmt.Sprintf(HISTORICAL_PRICES, epic, resolution, max, from, to))
+		Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -275,6 +282,19 @@ func (c *Client) HistoricalPrices(epic, resolution, max, from, to string) ([]Pri
 		if strings.Contains(string(resp.Body()), "error.prices.not-found") {
 			return nil, nil
 		}
+		c.log.Errorf("URL: %s", url)
 		return nil, errors.New(resp.Status() + ":" + string(resp.Body()))
 	}
 }
+
+type Logger interface {
+	Debugf(template string, args ...any)
+	Infof(template string, args ...any)
+	Errorf(template string, args ...any)
+}
+
+type nopLogger struct{}
+
+func (l *nopLogger) Debugf(template string, args ...any) {}
+func (l *nopLogger) Infof(template string, args ...any)  {}
+func (l *nopLogger) Errorf(template string, args ...any) {}
