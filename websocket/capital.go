@@ -204,6 +204,7 @@ func (c *Client) connect(reconnect bool) func() error {
 		c.wQueue = make(chan json.RawMessage, 1000)
 
 		// push subscription messages
+		c.log.Debugf("connect: CST %s,X-SECURITY-TOKEN %s", c.cstToken, c.securityToken)
 		subs := c.subs.get(c.cstToken, c.securityToken)
 		for _, msg := range subs {
 			c.wQueue <- msg
@@ -380,6 +381,7 @@ func (c *Client) route(msgs []json.RawMessage) error {
 				client := rest.New(c.apiKey, c.identifier, c.password)
 				c.cstToken = client.CstToken
 				c.securityToken = client.SecurityToken
+				c.log.Debugf("Create New Session: CST %s, X-SECURITY-TOKEN %s", c.cstToken, c.securityToken)
 			}
 			c.log.Errorf("error message:%s", string(msg))
 			continue
