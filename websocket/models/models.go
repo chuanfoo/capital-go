@@ -22,6 +22,38 @@ type Destination struct {
 	Destination string `json:"destination"`
 }
 
+//----------------------------------------- marketData.subscribe  -----------------------------------------
+
+type MarketDataSubscribe struct {
+	Status        string                     `json:"status"`
+	Destination   string                     `json:"destination"`
+	CorrelationID string                     `json:"correlationId"`
+	Payload       MarketDataSubscribePayload `json:"payload"`
+}
+type Subscriptions struct {
+	OILCRUDE string `json:"OIL_CRUDE"`
+}
+type MarketDataSubscribePayload struct {
+	Subscriptions Subscriptions `json:"subscriptions"`
+}
+
+//----------------------------------------- MarketData -----------------------------------------
+
+type MarketData struct {
+	Status      string          `json:"status"`
+	Destination string          `json:"destination"`
+	Payload     PayloadOfMarket `json:"payload"`
+}
+type PayloadOfMarket struct {
+	Epic      string  `json:"epic"`
+	Product   string  `json:"product"`
+	Bid       float64 `json:"bid"`
+	BidQty    float64 `json:"bidQty"`
+	Ofr       float64 `json:"ofr"`
+	OfrQty    float64 `json:"ofrQty"`
+	Timestamp int64   `json:"timestamp"`
+}
+
 //----------------------------------------- OHLCMarketData -----------------------------------------
 
 type OHLC struct {
