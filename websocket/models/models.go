@@ -80,3 +80,66 @@ type PING struct {
 	Cst           string `json:"cst"`
 	SecurityToken string `json:"securityToken"`
 }
+
+type SingleMarketDetails struct {
+	Instrument struct {
+		Epic                     string `json:"epic"`
+		Expiry                   string `json:"expiry"`
+		Name                     string `json:"name"`
+		LotSize                  int    `json:"lotSize"`
+		Type                     string `json:"type"`
+		ControlledRiskAllowed    bool   `json:"controlledRiskAllowed"`
+		StreamingPricesAvailable bool   `json:"streamingPricesAvailable"`
+		Currency                 string `json:"currency"`
+		MarginFactor             int    `json:"marginFactor"`
+		MarginFactorUnit         string `json:"marginFactorUnit"`
+		OpeningHours             struct {
+			Mon  []string      `json:"mon"`
+			Tue  []string      `json:"tue"`
+			Wed  []string      `json:"wed"`
+			Thu  []string      `json:"thu"`
+			Fri  []string      `json:"fri"`
+			Sat  []interface{} `json:"sat"`
+			Sun  []string      `json:"sun"`
+			Zone string        `json:"zone"`
+		} `json:"openingHours"`
+		Country string `json:"country"`
+	} `json:"instrument"`
+	DealingRules struct {
+		MinStepDistance struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		} `json:"minStepDistance"`
+		MinDealSize struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		} `json:"minDealSize"`
+		MinControlledRiskStopDistance struct {
+			Unit  string `json:"unit"`
+			Value int    `json:"value"`
+		} `json:"minControlledRiskStopDistance"`
+		MinNormalStopOrLimitDistance struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		} `json:"minNormalStopOrLimitDistance"`
+		MaxStopOrLimitDistance struct {
+			Unit  string `json:"unit"`
+			Value int    `json:"value"`
+		} `json:"maxStopOrLimitDistance"`
+		MarketOrderPreference   string `json:"marketOrderPreference"`
+		TrailingStopsPreference string `json:"trailingStopsPreference"`
+	} `json:"dealingRules"`
+	Snapshot struct {
+		MarketStatus        string  `json:"marketStatus"`
+		NetChange           float64 `json:"netChange"`
+		PercentageChange    float64 `json:"percentageChange"`
+		UpdateTime          string  `json:"updateTime"`
+		DelayTime           int     `json:"delayTime"`
+		Bid                 float64 `json:"bid"`
+		Offer               float64 `json:"offer"`
+		High                float64 `json:"high"`
+		Low                 float64 `json:"low"`
+		DecimalPlacesFactor int     `json:"decimalPlacesFactor"`
+		ScalingFactor       int     `json:"scalingFactor"`
+	} `json:"snapshot"`
+}

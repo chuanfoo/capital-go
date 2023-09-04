@@ -1,8 +1,10 @@
 package capital
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/chuanfoo/capital-go/websocket/models"
 	"strings"
 	"time"
 
@@ -282,6 +284,34 @@ func (c *Client) HistoricalPrices(epic, resolution, max, from, to string) ([]Pri
 		if strings.Contains(string(resp.Body()), "error.prices.not-found") {
 			return nil, nil
 		}
+		c.log.Errorf("URL: %s", url)
+		return nil, errors.New(resp.Status() + ":" + string(resp.Body()))
+	}
+}
+
+// 单一市场详情
+func (c *Client) SingleMarketDetails(epic string) (*models.SingleMarketDetails, error) {
+	url := API_URL + fmt.Sprintf(SINGLE_MARKET_DETAILS, epic)
+	var result interface{}
+	resp, err := c.client.R().
+		SetHeaders(c.headers).
+		SetResult(&result).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() == 200 {
+		bz, err := json.Marshal(result)
+		if err != nil {
+			return nil, err
+		}
+		var detail models.SingleMarketDetails
+		err = json.Unmarshal(bz, &detail)
+		if err != nil {
+			return nil, err
+		}
+		return &detail, nil
+	} else {
 		c.log.Errorf("URL: %s", url)
 		return nil, errors.New(resp.Status() + ":" + string(resp.Body()))
 	}
